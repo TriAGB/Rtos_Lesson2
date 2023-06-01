@@ -24,7 +24,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "SEGGER_RTT.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -45,9 +45,10 @@ typedef uint32_t TaskProfiler;
 
 /* USER CODE BEGIN PV */
 TaskProfiler Task_LD2_Profiler, YELLOW_Profiler, Default_Profiler;
-uint32_t LD2_Period = 100;
-uint32_t YELLOW_Period = 300;
-volatile int freemem;
+uint32_t LD2_Period = 10;
+uint32_t YELLOW_Period = 30;
+volatile uint32_t freemem;
+volatile uint32_t minfreemem;
 char pcWriteBuffer[512];
 
 /* USER CODE END PV */
@@ -61,7 +62,15 @@ void MX_FREERTOS_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+//int _write(int file, char *ptr, int len) {
+//  // Ваш код для передачи данных через UART
+//  // Например, используйте HAL_UART_Transmit() для отправки данных
+//  // Что-то вроде:
+//  HAL_UART_Transmit(&huart1, (uint8_t*) ptr, len, HAL_MAX_DELAY);
+//
+//  // Верните количество отправленных байтов
+//  return len;
+//}
 /* USER CODE END 0 */
 
 /**
@@ -97,7 +106,8 @@ int main(void)
 
   /* USER CODE END 2 */
 
-  /* Call init function for freertos objects (in freertos.c) */
+  /* Init scheduler */
+  osKernelInitialize();  /* Call init function for freertos objects (in freertos.c) */
   MX_FREERTOS_Init();
 
   /* Start scheduler */
