@@ -177,6 +177,11 @@ standard names. */
 /* Definitions needed when configGENERATE_RUN_TIME_STATS is on */
 #define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS configureTimerForRunTimeStats
 #define portGET_RUN_TIME_COUNTER_VALUE getRunTimeCounterValue
+/* Definitions needed when configGENERATE_RUN_TIME_STATS is on */
+
+//#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS configureTimerForRunTimeStats
+//#define portGET_RUN_TIME_COUNTER_VALUE()           ulHighFrequencyTimerTicks
+//extern volatile unsigned long ulHighFrequencyTimerTicks;
 /* USER CODE END 2 */
 
 /* USER CODE BEGIN Defines */

@@ -33,6 +33,7 @@
 #include <stm32g4xx_hal_uart.h>
 #include <usart.h>
 #include "SEGGER_RTT.h"
+#include "SEGGER_SYSVIEW.h"
 #include <string.h>
 
 #define YELLOW_PIN                              GPIO_PIN_5
@@ -81,6 +82,7 @@ uint32_t resultPrimeNumbers;
 uint32_t count = 0;
 uint32_t number;
 char buffer[512];
+uint16_t NumberOfTasks;
 
 /******SEGGER_RTT add channel 1: log ************/
 static uint8_t logBuffer[32];
@@ -91,53 +93,28 @@ uint32_t fibonacciNumber = 3000;
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
-const osThreadAttr_t defaultTask_attributes = {
-  .name = "defaultTask",
-  .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 128 * 4
-};
+const osThreadAttr_t defaultTask_attributes = { .name = "defaultTask",
+    .priority = (osPriority_t) osPriorityNormal, .stack_size = 128 * 4 };
 /* Definitions for LedTask1 */
 osThreadId_t LedTask1Handle;
-const osThreadAttr_t LedTask1_attributes = {
-  .name = "LedTask1",
-  .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 128 * 4
-};
+const osThreadAttr_t LedTask1_attributes = { .name = "LedTask1", .priority =
+    (osPriority_t) osPriorityNormal, .stack_size = 128 * 4 };
 /* Definitions for myTask03 */
 osThreadId_t myTask03Handle;
-const osThreadAttr_t myTask03_attributes = {
-  .name = "myTask03",
-  .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 128 * 4
-};
+const osThreadAttr_t myTask03_attributes = { .name = "myTask03", .priority =
+    (osPriority_t) osPriorityNormal, .stack_size = 128 * 4 };
 /* Definitions for performTrigonom */
 osThreadId_t performTrigonomHandle;
-const osThreadAttr_t performTrigonom_attributes = {
-  .name = "performTrigonom",
-  .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 128 * 4
-};
+const osThreadAttr_t performTrigonom_attributes = { .name = "performTrigonom",
+    .priority = (osPriority_t) osPriorityNormal, .stack_size = 128 * 4 };
 /* Definitions for TaskMemory */
 osThreadId_t TaskMemoryHandle;
-const osThreadAttr_t TaskMemory_attributes = {
-  .name = "TaskMemory",
-  .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 128 * 4
-};
+const osThreadAttr_t TaskMemory_attributes = { .name = "TaskMemory", .priority =
+    (osPriority_t) osPriorityNormal, .stack_size = 128 * 4 };
 /* Definitions for Fibonachi */
 osThreadId_t FibonachiHandle;
-const osThreadAttr_t Fibonachi_attributes = {
-  .name = "Fibonachi",
-  .priority = (osPriority_t) osPriorityBelowNormal,
-  .stack_size = 128 * 4
-};
-/* Definitions for configureTimerF */
-osThreadId_t configureTimerFHandle;
-const osThreadAttr_t configureTimerF_attributes = {
-  .name = "configureTimerF",
-  .priority = (osPriority_t) osPriorityLow,
-  .stack_size = 128 * 4
-};
+const osThreadAttr_t Fibonachi_attributes = { .name = "Fibonachi", .priority =
+    (osPriority_t) osPriorityBelowNormal, .stack_size = 128 * 4 };
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -150,7 +127,6 @@ void YellowLED(void *argument);
 void performTrigonometricCalculations_Func(void *argument);
 void TaskMemory_Func(void *argument);
 void Fibonachi_Func(void *argument);
-void configureTimerForRunTimeStats(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -247,10 +223,10 @@ void vPrintStringAndNumber(unsigned long value) {
 /* USER CODE END 1 */
 
 /**
-  * @brief  FreeRTOS initialization
-  * @param  None
-  * @retval None
-  */
+ * @brief  FreeRTOS initialization
+ * @param  None
+ * @retval None
+ */
 void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
 
@@ -274,7 +250,8 @@ void MX_FREERTOS_Init(void) {
 
   /* Create the thread(s) */
   /* creation of defaultTask */
-  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL,
+      &defaultTask_attributes);
 
   /* creation of LedTask1 */
   LedTask1Handle = osThreadNew(LedTaskFunc, NULL, &LedTask1_attributes);
@@ -283,7 +260,8 @@ void MX_FREERTOS_Init(void) {
   myTask03Handle = osThreadNew(YellowLED, NULL, &myTask03_attributes);
 
   /* creation of performTrigonom */
-  performTrigonomHandle = osThreadNew(performTrigonometricCalculations_Func, NULL, &performTrigonom_attributes);
+  performTrigonomHandle = osThreadNew(performTrigonometricCalculations_Func,
+  NULL, &performTrigonom_attributes);
 
   /* creation of TaskMemory */
   TaskMemoryHandle = osThreadNew(TaskMemory_Func, NULL, &TaskMemory_attributes);
@@ -291,11 +269,10 @@ void MX_FREERTOS_Init(void) {
   /* creation of Fibonachi */
   FibonachiHandle = osThreadNew(Fibonachi_Func, NULL, &Fibonachi_attributes);
 
-  /* creation of configureTimerF */
-  configureTimerFHandle = osThreadNew(configureTimerForRunTimeStats, NULL, &configureTimerF_attributes);
-
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
+
+  vTaskStartScheduler();
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
@@ -310,25 +287,28 @@ void MX_FREERTOS_Init(void) {
  * @param  argument: Not used
  * @retval None
  */
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 /* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void *argument)
-{
+void StartDefaultTask(void *argument) {
   /* USER CODE BEGIN StartDefaultTask */
   /* Infinite loop */
   SEGGER_RTT_Init();
 #if SOFTWARE_DEBUG == 1
+
   SEGGER_RTT_ConfigUpBuffer(1, "Log", logBuffer, sizeof(logBuffer),
   SEGGER_RTT_MODE_NO_BLOCK_TRIM);
-  SEGGER_RTT_ConfigUpBuffer(0, NULL, NULL, 0,
-  SEGGER_RTT_MODE_NO_BLOCK_TRIM);
+//  SEGGER_RTT_ConfigUpBuffer(0, NULL, NULL, 0,
+//  SEGGER_RTT_MODE_NO_BLOCK_TRIM);
   SEGGER_RTT_SetTerminal(0);
   SEGGER_RTT_printf(0, "DefaultTask\r\n");
 #endif
   for (;;) {
     Default_Profiler++;
 #if SOFTWARE_DEBUG == 1
-    SEGGER_RTT_SetTerminal(0);
-    SEGGER_RTT_printf(0, "Default_Profiler = %d\n", Default_Profiler);
+//    SEGGER_RTT_SetTerminal(0);
+//    SEGGER_RTT_printf(0, "Default_Profiler = %d\n", Default_Profiler);
 #endif
     if (LD2_Period == 100) {
       LD2_Period = 1000;
@@ -337,11 +317,10 @@ void StartDefaultTask(void *argument)
       LD2_Period = 100;
     YELLOW_Period = LD2_Period * 3;
     vTaskDelay(5000);
-    // printf("%ld", (long int) YELLOW_Period);
-
   }
   /* USER CODE END StartDefaultTask */
 }
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 /* USER CODE BEGIN Header_LedTaskFunc */
 /**
@@ -350,12 +329,11 @@ void StartDefaultTask(void *argument)
  * @retval None
  */
 /* USER CODE END Header_LedTaskFunc */
-void LedTaskFunc(void *argument)
-{
+void LedTaskFunc(void *argument) {
   /* USER CODE BEGIN LedTaskFunc */
   /* Infinite loop */
-//
-//  SEGGER_RTT_SetTerminal(1);
+
+  //  SEGGER_RTT_SetTerminal(1);
 //  SEGGER_RTT_printf(0, "LedTaskFunc\r\n");
   for (;;) {
 
@@ -368,6 +346,8 @@ void LedTaskFunc(void *argument)
   /* USER CODE END LedTaskFunc */
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 /* USER CODE BEGIN Header_YellowLED */
 /**
  * @brief Function implementing the myTask03 thread.
@@ -375,8 +355,7 @@ void LedTaskFunc(void *argument)
  * @retval None
  */
 /* USER CODE END Header_YellowLED */
-void YellowLED(void *argument)
-{
+void YellowLED(void *argument) {
   /* USER CODE BEGIN YellowLED */
   /* Infinite loop */
 //  SEGGER_RTT_SetTerminal(2);
@@ -389,12 +368,11 @@ void YellowLED(void *argument)
     HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8);
     HAL_GPIO_TogglePin(YELLOW_GPIO_PORT, YELLOW_PIN);
     vTaskDelay(YELLOW_Period);
-//    setvbuf(stdout, NULL, _IONBF, 0);
-//    printf("Hello, World!\r\n");
-
   }
   /* USER CODE END YellowLED */
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 /* USER CODE BEGIN Header_performTrigonometricCalculations_Func */
 /**
@@ -403,19 +381,17 @@ void YellowLED(void *argument)
  * @retval None
  */
 /* USER CODE END Header_performTrigonometricCalculations_Func */
-void performTrigonometricCalculations_Func(void *argument)
-{
+void performTrigonometricCalculations_Func(void *argument) {
   /* USER CODE BEGIN performTrigonometricCalculations_Func */
   /* Infinite loop */
-
   for (;;) {
-
     performTrigonometricCalculations();
-
     vTaskDelay(1);
   }
   /* USER CODE END performTrigonometricCalculations_Func */
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 /* USER CODE BEGIN Header_TaskMemory_Func */
 /**
@@ -424,24 +400,32 @@ void performTrigonometricCalculations_Func(void *argument)
  * @retval None
  */
 /* USER CODE END Header_TaskMemory_Func */
-void TaskMemory_Func(void *argument)
-{
+void TaskMemory_Func(void *argument) {
   /* USER CODE BEGIN TaskMemory_Func */
   /* Infinite loop */
+  SEGGER_SYSVIEW_Conf(); /* Configure and initialize SystemView */
   for (;;) {
 #if SOFTWARE_DEBUG == 1
-
 //    /* add channel 1: log */
 //    SEGGER_RTT_ConfigUpBuffer(1, "Log", logBuffer, sizeof(logBuffer),
 //    SEGGER_RTT_MODE_NO_BLOCK_TRIM);
+
     freemem = xPortGetFreeHeapSize();
     minfreemem = xPortGetMinimumEverFreeHeapSize();
-    vTaskList(pcWriteBuffer);
+    NumberOfTasks = uxTaskGetNumberOfTasks();
+    vTaskGetRunTimeStats(pcWriteBuffer);
+//    vTaskList(pcWriteBuffer);
+    SEGGER_RTT_SetTerminal(0);
+    //char pcWriteBuffer[] = "Hello, world!";
+    SEGGER_RTT_WriteString(0, pcWriteBuffer);
+
 #endif
-    vTaskDelay(1);
+    vTaskDelay(3000);
   }
   /* USER CODE END TaskMemory_Func */
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 /* USER CODE BEGIN Header_Fibonachi_Func */
 /**
@@ -450,8 +434,7 @@ void TaskMemory_Func(void *argument)
  * @retval None
  */
 /* USER CODE END Header_Fibonachi_Func */
-void Fibonachi_Func(void *argument)
-{
+void Fibonachi_Func(void *argument) {
   /* USER CODE BEGIN Fibonachi_Func */
   /* Infinite loop */
   for (;;) {
@@ -463,28 +446,7 @@ void Fibonachi_Func(void *argument)
   /* USER CODE END Fibonachi_Func */
 }
 
-/* USER CODE BEGIN Header_configureTimerForRunTimeStats */
-/**
- * @brief Function implementing the configureTimerF thread.
- * @param argument: Not used
- * @retval None
- */
-/* USER CODE END Header_configureTimerForRunTimeStats */
-void configureTimerForRunTimeStats(void *argument)
-{
-  /* USER CODE BEGIN configureTimerForRunTimeStats */
-  /* Infinite loop */
-//  SysTick_Config(SystemCoreClock / osKernelGetTickFreq());
-//  osKernelInitialize();  // �?нициализация ядра операционной системы
-  for (;;) {
-
-//    vTaskGetRunTimeStats(buffer); // Получение статистики исполнения задач FreeRTOS
-//    printf("Run-time stats:\n%s\n", buffer); // Вывод статистики в консоль или другой вывод
-
-    osDelay(1);
-  }
-  /* USER CODE END configureTimerForRunTimeStats */
-}
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
